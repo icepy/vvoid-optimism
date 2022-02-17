@@ -8,3 +8,4 @@ typechain
 cache
 artifacts
 account.config.js
+client/src/contract.ts

@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { ethers } from 'ethers';
+import { CONTRACT_ADDRESS } from './contract';
 import HelloJSON from './abi/Hello.json';
+import './App.css';
 
-const contractAddress = '0xF98bE2eE83151283D0bA34A2cEBB349bBBB9d783';
 const helloABI = HelloJSON.abi;
 
 function App() {
@@ -15,7 +16,7 @@ function App() {
       if (ethereum){
         const provider = new ethers.providers.Web3Provider(ethereum);
         const signer = provider.getSigner();
-        const helloContract = new ethers.Contract(contractAddress, helloABI, signer);
+        const helloContract = new ethers.Contract(CONTRACT_ADDRESS, helloABI, signer);
         const total = await helloContract.getHelloTotal();
         setHelloTotal(total.toNumber());
       }
@@ -30,7 +31,7 @@ function App() {
       if (ethereum){
         const provider = new ethers.providers.Web3Provider(ethereum);
         const signer = provider.getSigner();
-        const helloContract = new ethers.Contract(contractAddress, helloABI, signer);
+        const helloContract = new ethers.Contract(CONTRACT_ADDRESS, helloABI, signer);
         await helloContract.reduce();
         const total = await helloContract.getHelloTotal();
         setHelloTotal(total.toNumber());
@@ -39,12 +40,35 @@ function App() {
 
     }
   }
+
+  const onReduceResultEvent = (from: string, timestamp: ethers.BigNumber, message: ethers.Event) => {
+    console.log('from', from);
+    console.log('timestamp', timestamp);
+    console.log('message', message);
+    console.log('sender address', message.args![0]);
+    console.log('result', message.args![1].toNumber());
+  }
   
   useEffect(() => {
+    let helloContract: any = null; 
+
     if (helloTotal === 0){
       getTotal();
     }
-    console.log('hello total', helloTotal)
+    console.log('hello total', helloTotal);
+    const { ethereum } = window as any;
+    if (ethereum){
+      const provider = new ethers.providers.Web3Provider(ethereum);
+      const signer = provider.getSigner();
+      helloContract = new ethers.Contract(CONTRACT_ADDRESS, helloABI, signer);
+      helloContract.on('HelloReduceResult', onReduceResultEvent);
+    }
+    return () => {
+      if (helloContract){
+        helloContract.off('HelloReduceResult', onReduceResultEvent);
+      }
+    }
+
   }, [helloTotal]);
 
   return (

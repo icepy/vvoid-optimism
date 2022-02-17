@@ -1,3 +1,10 @@
 .App {
   text-align: center;
+  margin: 100px;
+}
+
+.App button{
+  width: 100px;
+  height: 100px;
+  font-size: 20px;
 }
